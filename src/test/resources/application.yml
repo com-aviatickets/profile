@@ -1,16 +1,19 @@
 spring:
-  application:
-    name: profile
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: postgres
-  liquibase:
-    change-log: classpath:/db/changelog/changelog-master.yaml
-    database-change-log-table: profile_database_changelog
-    database-change-log-lock-table: profile_database_changelog_lock
   config:
     import: "optional:configserver:http://localhost:8087"
+  cloud:
+    config:
+      discovery:
+        enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  liquibase:
+    enabled: false
   mvc:
     format:
       date: iso
