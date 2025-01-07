@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "https://checkstyle.sourceforge.io/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <module name="TreeWalker">
+        <!-- Неиспользуемые локальные переменные -->
+        <module name="UnusedLocalVariable"/>
+
+        <!--Цикломатическая сложность метода-->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="10"/>
+        </module>
+
+        <!--Максимальное количество вложенных операторов if-->
+        <module name="NestedIfDepth">
+            <property name="max" value="3"/>
+        </module>
+
+        <!--Максимальное количество вложенных блоков try-->
+        <module name="NestedTryDepth">
+            <property name="max" value="0"/>
+        </module>
+
+        <!--Если переопределен equals(), нужно переопределить и hashcode(), и наоборот-->
+        <module name="EqualsHashCode"/>
+
+        <!--Неиспользуемые импорты-->
+        <module name="UnusedImports"/>
+
+        <!--Порядок объявления констант, полей, конструкторов, методов класса в соответствии с Java Code Convention-->
+        <module name="DeclarationOrder"/>
+    </module>
+</module>

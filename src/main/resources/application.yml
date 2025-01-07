@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: profile
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.yaml
+    database-change-log-table: profile_database_changelog
+    database-change-log-lock-table: profile_database_changelog_lock
+  config:
+    import: "optional:configserver:http://localhost:8087"
+  mvc:
+    format:
+      date: iso
+      date-time: iso
+      time: iso
+  data:
+    web:
+      pageable:
+        default-page-size: 20000
+        max-page-size: 20000
+        one-indexed-parameters: true
+
+app:
+  jwt:
+    accessToken:
+      secret: "vurghmwnvy8v8tvnu4nytv78h456789_+P87bbeytuv4vbrgigui54h2guwb4u6ugbrjegt78gWK-0iqkrhuihgujnbutgh5utgg"
+      ttl: 86400000
+    refreshToken:
+      secret: "nhetdhirbniote8hbiotth589hfihfgh589tyhgih04hrviorgh85nifgh8trhnvbiurgh89hieh8hrughrh8giur"

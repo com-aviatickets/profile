@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - '**' # Запуск при пуше в любую ветку
+  pull_request:
+    branches:
+      - '**' # Запуск при создании pull request из любой ветки
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Клонирование репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Установка JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin' # Альтернатива: zulu, adopt, etc.
+          cache: maven
+
+      # 3. Шаг Checkstyle
+      - name: Run Checkstyle
+        run: mvn clean validate
+
+      # 4. Шаг Test
+      - name: Run Tests
+        run: mvn clean test
+
+      # 5. Шаг Build (без тестов)
+      - name: Build Package (skip tests)
+        run: mvn clean package -DskipTests
