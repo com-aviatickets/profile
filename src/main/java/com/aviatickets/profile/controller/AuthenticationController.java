@@ -1,15 +1,15 @@
 package com.aviatickets.profile.controller;
 
 import com.aviatickets.profile.controller.request.LoginRequest;
-import com.aviatickets.profile.controller.request.TokenRequest;
-import com.aviatickets.profile.controller.response.AccessTokenResponse;
-import com.aviatickets.profile.controller.response.RefreshTokenResponse;
+import com.aviatickets.profile.controller.response.TokenResponse;
 import com.aviatickets.profile.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import static com.aviatickets.profile.controller.ControllerConstants.ACCESS_TOKEN_COOKIE;
+import static com.aviatickets.profile.controller.ControllerConstants.REFRESH_TOKEN_COOKIE;
 
 @RestController
 @RequestMapping( "/auth")
@@ -18,21 +18,48 @@ public class AuthenticationController {
 
     private final UserService userService;
 
-    @PostMapping("/token")
-    public AccessTokenResponse getNewAccessToken(@RequestBody TokenRequest tokenRequest) {
-        String accessToken = userService.login(tokenRequest.refreshToken());
-        return new AccessTokenResponse(accessToken);
+    @GetMapping("/refresh")
+    public void getNewAccessToken(
+            @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        String accessToken = userService.login(refreshToken);
+
+        setCookie(response, refreshToken, accessToken);
     }
 
     @PostMapping("/login")
-    public AccessTokenResponse login(@RequestBody LoginRequest request) {
-        String accessToken = userService.login(request);
-        return new AccessTokenResponse(accessToken);
+    public void login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        TokenResponse tokenResponse = userService.login(request);
+
+        setCookie(response, tokenResponse.refreshToken(), tokenResponse.accessToken());
     }
 
     @PostMapping("/signUp")
-    public RefreshTokenResponse signUp(@RequestBody LoginRequest request) {
-        return userService.signUp(request);
+    public void signUp(@RequestBody LoginRequest request,  HttpServletResponse response) {
+        TokenResponse refreshToken = userService.signUp(request);
+
+        setCookie(response, refreshToken.refreshToken(), refreshToken.accessToken());
+    }
+
+    @GetMapping("/logout")
+    public void logout(HttpServletResponse response) {
+        setCookie(response, null, null);
+    }
+
+    private void setCookie(HttpServletResponse response, String refreshToken, String accessToken) {
+        Cookie accessTokenCookie = new Cookie(ACCESS_TOKEN_COOKIE, accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(31557600); // 1 час
+
+        Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN_COOKIE, refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(31557600); // 7 дней
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
     }
 
 }

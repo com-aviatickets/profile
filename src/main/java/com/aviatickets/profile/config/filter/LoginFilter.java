@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 
+import static com.aviatickets.profile.controller.ControllerConstants.ACCESS_TOKEN_COOKIE;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class LoginFilter extends OncePerRequestFilter {
-
-    public static final String AUTHORIZATION = "Access-token";
 
     private final UserRepository repository;
     private final JwtProperties properties;
@@ -66,13 +66,10 @@ public class LoginFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(HttpServletRequest request) {
-        if (request.getHeader(AUTHORIZATION) != null) {
-            return request.getHeader(AUTHORIZATION);
-        }
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(AUTHORIZATION)) {
+                if (cookie.getName().equals(ACCESS_TOKEN_COOKIE)) {
                     return cookie.getValue();
                 }
             }

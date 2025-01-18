@@ -2,7 +2,7 @@ package com.aviatickets.profile.service;
 
 import com.aviatickets.profile.config.AppProperties.JwtProperties;
 import com.aviatickets.profile.controller.request.LoginRequest;
-import com.aviatickets.profile.controller.response.RefreshTokenResponse;
+import com.aviatickets.profile.controller.response.TokenResponse;
 import com.aviatickets.profile.controller.response.UserDto;
 import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
@@ -46,18 +46,21 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public String login(LoginRequest loginRequest) {
+    public TokenResponse login(LoginRequest loginRequest) {
         User user = repository.findByUsername(loginRequest.username()).orElse(null);
 
         if (user == null || !passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new AccessDeniedException(FORBIDDEN_MESSAGE);
         }
 
-        return JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
+        String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
+        String refreshToken = JwtUtils.generateToken(user, jwtProperties.refreshToken().secret(), -1);
+
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     @Transactional
-    public RefreshTokenResponse signUp(LoginRequest request) {
+    public TokenResponse signUp(LoginRequest request) {
         User user = new User();
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
@@ -67,7 +70,7 @@ public class UserService {
         String refreshToken = JwtUtils.generateToken(user, jwtProperties.refreshToken().secret(), -1);
         String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
 
-        return new RefreshTokenResponse(accessToken, refreshToken);
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     private User saveUser(User user) {

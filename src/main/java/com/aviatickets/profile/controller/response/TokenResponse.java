@@ -1,6 +1,6 @@
 package com.aviatickets.profile.controller.response;
 
-public record RefreshTokenResponse(
+public record TokenResponse(
         String accessToken,
         String refreshToken
 ) {
