@@ -1,6 +1,7 @@
 package com.aviatickets.profile.config;
 
 import com.aviatickets.profile.controller.response.ErrorDto;
+import com.aviatickets.profile.exception.UnauthorizedException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -45,6 +46,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<?> handleValidationException(ValidationException e) {
         log.debug(EXCEPTION_MESSAGE, e);
         return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    protected ResponseEntity<?> handleUnauthorizedException(UnauthorizedException e) {
+        log.error(EXCEPTION_MESSAGE, e);
+        return buildErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     private ResponseEntity<?> buildErrorResponse(String message, HttpStatus status) {

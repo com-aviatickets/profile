@@ -1,6 +1,5 @@
 package com.aviatickets.profile.config;
 
-import com.aviatickets.profile.config.filter.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,13 +8,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final LoginFilter loginFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -30,7 +26,6 @@ public class SecurityConfig {
                                 .requestMatchers("/api/**").authenticated()
                                 .anyRequest().permitAll()
                 )
-                .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .build();

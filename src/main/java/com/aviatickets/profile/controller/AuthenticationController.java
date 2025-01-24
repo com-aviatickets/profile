@@ -16,6 +16,7 @@ import static com.aviatickets.profile.controller.ControllerConstants.REFRESH_TOK
 @RequiredArgsConstructor
 public class AuthenticationController {
 
+    public static final int MAX_AGE_COOKIE = 31557600;
     private final UserService userService;
 
     @GetMapping("/refresh")
@@ -25,38 +26,38 @@ public class AuthenticationController {
     ) {
         String accessToken = userService.login(refreshToken);
 
-        setCookie(response, refreshToken, accessToken);
+        setCookie(response, refreshToken, accessToken, MAX_AGE_COOKIE);
     }
 
     @PostMapping("/login")
     public void login(@RequestBody LoginRequest request, HttpServletResponse response) {
         TokenResponse tokenResponse = userService.login(request);
 
-        setCookie(response, tokenResponse.refreshToken(), tokenResponse.accessToken());
+        setCookie(response, tokenResponse.refreshToken(), tokenResponse.accessToken(), MAX_AGE_COOKIE);
     }
 
     @PostMapping("/signUp")
     public void signUp(@RequestBody LoginRequest request,  HttpServletResponse response) {
         TokenResponse refreshToken = userService.signUp(request);
 
-        setCookie(response, refreshToken.refreshToken(), refreshToken.accessToken());
+        setCookie(response, refreshToken.refreshToken(), refreshToken.accessToken(), MAX_AGE_COOKIE);
     }
 
     @GetMapping("/logout")
     public void logout(HttpServletResponse response) {
-        setCookie(response, null, null);
+        setCookie(response, null, null, 0);
     }
 
-    private void setCookie(HttpServletResponse response, String refreshToken, String accessToken) {
+    private void setCookie(HttpServletResponse response, String refreshToken, String accessToken, int maxAge) {
         Cookie accessTokenCookie = new Cookie(ACCESS_TOKEN_COOKIE, accessToken);
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge(31557600); // 1 час
+        accessTokenCookie.setMaxAge(maxAge); // 1 час
 
         Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN_COOKIE, refreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(31557600); // 7 дней
+        refreshTokenCookie.setMaxAge(maxAge); // 7 дней
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);

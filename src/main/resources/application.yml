@@ -30,3 +30,5 @@ app:
       ttl: 86400000
     refreshToken:
       secret: "nhetdhirbniote8hbiotth589hfihfgh589tyhgih04hrviorgh85nifgh8trhnvbiurgh89hieh8hrughrh8giur"
+server:
+  port: 8081

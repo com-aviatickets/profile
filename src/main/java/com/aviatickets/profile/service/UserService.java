@@ -4,6 +4,7 @@ import com.aviatickets.profile.config.AppProperties.JwtProperties;
 import com.aviatickets.profile.controller.request.LoginRequest;
 import com.aviatickets.profile.controller.response.TokenResponse;
 import com.aviatickets.profile.controller.response.UserDto;
+import com.aviatickets.profile.exception.UnauthorizedException;
 import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
 import com.aviatickets.profile.repository.UserRepository;
@@ -50,7 +51,7 @@ public class UserService {
         User user = repository.findByUsername(loginRequest.username()).orElse(null);
 
         if (user == null || !passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
-            throw new AccessDeniedException(FORBIDDEN_MESSAGE);
+            throw new UnauthorizedException(FORBIDDEN_MESSAGE);
         }
 
         String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
