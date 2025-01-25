@@ -10,7 +10,7 @@ spring:
     database-change-log-table: profile_database_changelog
     database-change-log-lock-table: profile_database_changelog_lock
   config:
-    import: "optional:configserver:http://localhost:8087"
+    import: "optional:configserver:http://config:8087"
   mvc:
     format:
       date: iso
