@@ -2,6 +2,7 @@ package com.aviatickets.profile.config;
 
 import com.aviatickets.profile.controller.response.ErrorDto;
 import com.aviatickets.profile.exception.UnauthorizedException;
+import com.aviatickets.profile.exception.UsernameAlreadyExistsException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -54,11 +55,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    protected ResponseEntity<?> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException e) {
+        log.error(EXCEPTION_MESSAGE, e);
+        return buildErrorResponse(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
     private ResponseEntity<?> buildErrorResponse(String message, HttpStatus status) {
         return new ResponseEntity<>(
                 new ErrorDto(message, status.getReasonPhrase(), status.value()),
                 status
         );
     }
-
 }
