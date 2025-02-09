@@ -38,9 +38,14 @@ public class AuthenticationController {
 
     @PostMapping("/signUp")
     public void signUp(@RequestBody LoginRequest request,  HttpServletResponse response) {
+        if (request == null) {
+            throw new IllegalArgumentException("LoginRequest cannot be null"); // Проверка на null
+        }
         TokenResponse refreshToken = userService.signUp(request);
-
         setCookie(response, refreshToken.refreshToken(), refreshToken.accessToken(), MAX_AGE_COOKIE);
+
+        response.setHeader("Refresh-Token", refreshToken.refreshToken());
+        response.setHeader("Access-Token", refreshToken.accessToken());
     }
 
     @GetMapping("/logout")

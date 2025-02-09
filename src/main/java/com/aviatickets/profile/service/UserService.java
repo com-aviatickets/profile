@@ -5,6 +5,7 @@ import com.aviatickets.profile.controller.request.LoginRequest;
 import com.aviatickets.profile.controller.response.TokenResponse;
 import com.aviatickets.profile.controller.response.UserDto;
 import com.aviatickets.profile.exception.UnauthorizedException;
+import com.aviatickets.profile.exception.UsernameAlreadyExistsException;
 import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
 import com.aviatickets.profile.repository.UserRepository;
@@ -32,6 +33,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public String login(String refreshToken) {
@@ -62,6 +64,9 @@ public class UserService {
 
     @Transactional
     public TokenResponse signUp(LoginRequest request) {
+        if (userRepository.existsByUsername(request.username())) {
+            throw new UsernameAlreadyExistsException("Username already exists: " + request.username());
+        }
         User user = new User();
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
@@ -70,7 +75,6 @@ public class UserService {
 
         String refreshToken = JwtUtils.generateToken(user, jwtProperties.refreshToken().secret(), -1);
         String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
-
         return new TokenResponse(accessToken, refreshToken);
     }
 
