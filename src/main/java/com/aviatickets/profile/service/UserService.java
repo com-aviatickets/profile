@@ -2,6 +2,7 @@ package com.aviatickets.profile.service;
 
 import com.aviatickets.profile.config.AppProperties.JwtProperties;
 import com.aviatickets.profile.controller.request.LoginRequest;
+import com.aviatickets.profile.controller.request.UpdateUserRequest;
 import com.aviatickets.profile.controller.response.TokenResponse;
 import com.aviatickets.profile.controller.response.UserDto;
 import com.aviatickets.profile.exception.UnauthorizedException;
@@ -10,6 +11,7 @@ import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
 import com.aviatickets.profile.repository.UserRepository;
 import com.aviatickets.profile.util.JwtUtils;
+import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -29,11 +32,10 @@ public class UserService {
     public static final String FORBIDDEN_MESSAGE = "You are not authorized to perform this action";
     public static final String NOT_FOUND_USER = "User by id %d not found";
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
-    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public String login(String refreshToken) {
@@ -44,13 +46,13 @@ public class UserService {
             throw new RuntimeException(UNAUTHORIZED_MESSAGE, e);
         }
 
-        User user = repository.findById(userId).orElseThrow(() -> new AccessDeniedException(FORBIDDEN_MESSAGE));
+        User user = userRepository.findById(userId).orElseThrow(() -> new AccessDeniedException(FORBIDDEN_MESSAGE));
         return JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
     }
 
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest loginRequest) {
-        User user = repository.findByUsername(loginRequest.username()).orElse(null);
+        User user = userRepository.findByUsername(loginRequest.username()).orElse(null);
 
         if (user == null || !passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new UnauthorizedException(FORBIDDEN_MESSAGE);
@@ -79,16 +81,41 @@ public class UserService {
     }
 
     private User saveUser(User user) {
-        return repository.save(user);
+        return userRepository.save(user);
     }
 
     public Page<UserDto> findAll(Pageable pageable) {
-        return repository.findAll(pageable).map(userMapper::modelToDto);
+        return userRepository.findAll(pageable).map(userMapper::modelToDto);
     }
 
     public UserDto findById(@NotNull Long id) {
-        User user = repository.findById(id).orElseThrow(() -> new NoSuchElementException(NOT_FOUND_USER.formatted(id)));
+        User user = userRepository.findById(id).orElseThrow(() -> new NoSuchElementException(NOT_FOUND_USER.formatted(id)));
         return userMapper.modelToDto(user);
+    }
+    public UserDto updateUser(UpdateUserRequest updateUserRequest, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+
+        if (updateUserRequest.getAge() <= 0) {
+            throw new ValidationException("Age must be greater than 0");
+        }
+
+        if (!updateUserRequest.getEmail().matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$")) {
+            throw new ValidationException("Invalid email address");
+        }
+
+
+        user.setFio(updateUserRequest.getFio());
+        user.setAge(updateUserRequest.getAge());
+        user.setEmail(updateUserRequest.getEmail());
+        user.setPhone(updateUserRequest.getPhone());
+        user.setUsername(updateUserRequest.getUsername());
+
+
+        User updatedUser = userRepository.save(user);
+
+
+        return userMapper.modelToDto(updatedUser);
     }
 
 }
