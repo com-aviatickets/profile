@@ -1,5 +1,6 @@
 package com.aviatickets.profile.model;
 
+import com.aviatickets.profile.controller.request.UpdateUserRequest;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,5 +40,33 @@ public class User {
     private ZonedDateTime createdAt;
     @UpdateTimestamp
     private ZonedDateTime updatedAt;
+
+    public void merge(UpdateUserRequest updateUserRequest) {
+        if (updateUserRequest.getFio() != null) {
+            this.fio = updateUserRequest.getFio();
+
+        }
+
+        if (updateUserRequest.getEmail() != null) {
+            this.email = updateUserRequest.getEmail();
+
+        }
+        if (updateUserRequest.getAge() != 0) {
+            this.age = updateUserRequest.getAge();
+
+        }
+        if (updateUserRequest.getUsername() != null) {
+            this.username = updateUserRequest.getUsername();
+
+        }
+
+        if (updateUserRequest.getPhone() != null) {
+            this.phone = updateUserRequest.getPhone();
+
+        }
+
+
+
+    }
 
 }

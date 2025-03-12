@@ -11,7 +11,6 @@ import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
 import com.aviatickets.profile.repository.UserRepository;
 import com.aviatickets.profile.util.JwtUtils;
-import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -93,27 +92,14 @@ public class UserService {
         return userMapper.modelToDto(user);
     }
     public UserDto updateUser(UpdateUserRequest updateUserRequest, Long userId) {
+        updateUserRequest.validate();
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
 
-        if (updateUserRequest.getAge() <= 0) {
-            throw new ValidationException("Age must be greater than 0");
-        }
-
-        if (!updateUserRequest.getEmail().matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$")) {
-            throw new ValidationException("Invalid email address");
-        }
-
-
-        user.setFio(updateUserRequest.getFio());
-        user.setAge(updateUserRequest.getAge());
-        user.setEmail(updateUserRequest.getEmail());
-        user.setPhone(updateUserRequest.getPhone());
-        user.setUsername(updateUserRequest.getUsername());
-
+        user.merge(updateUserRequest);
 
         User updatedUser = userRepository.save(user);
-
 
         return userMapper.modelToDto(updatedUser);
     }
