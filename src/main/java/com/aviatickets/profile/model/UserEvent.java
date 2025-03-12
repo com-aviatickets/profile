@@ -1,13 +1,12 @@
 package com.aviatickets.profile.model;
 
+import com.aviatickets.profile.controller.response.UserDto;
 import lombok.*;
-import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
 public class UserEvent {
     private String operation;
-    private String data;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
+    private UserDto data;
+
 }

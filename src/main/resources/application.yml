@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
-    password: postgres
+    password: root1
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.yaml
     database-change-log-table: profile_database_changelog
@@ -34,7 +34,8 @@ server:
   port: 8081
 
 kafka:
-  host: localhost
-  port: 9092
+  bootstrap-servers: localhost:9092
   topic: profileUserSync
+  consumer:
+    group-id: profile
 

@@ -36,8 +36,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
-    private final UserRepository userRepository;
-    private final UserProfileService userProfileService;
+    private final UserEventProducer userEventProducer;
 
     @Transactional(readOnly = true)
     public String login(String refreshToken) {
@@ -68,31 +67,31 @@ public class UserService {
 
     @Transactional
     public TokenResponse signUp(LoginRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
+        if (repository.existsByUsername(request.username())) {
             throw new UsernameAlreadyExistsException("Username already exists: " + request.username());
         }
+
         User user = new User();
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user = saveUser(user);
+        user.setCreatedAt(ZonedDateTime.now());
 
-        UserEvent event = new UserEvent(
-                "CREATE",
-                userMapper.modelToDto(user).toString(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-        userProfileService.sendEvent(event);
+        UserEvent event = new UserEvent("CREATE", userMapper.modelToDto(user));
 
-        String refreshToken = JwtUtils.generateToken(user, jwtProperties.refreshToken().secret(), -1);
-        String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
-        return new TokenResponse(accessToken, refreshToken);
+        boolean eventSent = userEventProducer.sendEvent(event);
+
+        if (!eventSent) {
+            throw new RuntimeException("Failed to send event to Kafka. User will not be saved.");
+        }
+
+        return saveUser(user);
     }
 
-    private User saveUser(User user) {
-        user.setCreatedAt(ZonedDateTime.now());
-        user.setUpdatedAt(ZonedDateTime.now());
-        return repository.save(user);
+    private TokenResponse saveUser(User user) {
+        User savedUser = repository.save(user);
+        String refreshToken = JwtUtils.generateToken(savedUser, jwtProperties.refreshToken().secret(), -1);
+        String accessToken = JwtUtils.generateToken(savedUser, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     public Page<UserDto> findAll(Pageable pageable) {
