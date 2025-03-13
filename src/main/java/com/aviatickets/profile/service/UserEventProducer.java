@@ -22,9 +22,6 @@ public class UserEventProducer {
     private final ObjectMapper objectMapper;
 
     public boolean sendEvent(UserEvent userEvent) {
-        String eventId = UUID.randomUUID().toString();
-        String sendedAt = ZonedDateTime.now().toString();
-
         try {
             String eventJson = objectMapper.writeValueAsString(userEvent);
 
