@@ -38,4 +38,3 @@ kafka:
   topic: profileUserSync
   consumer:
     group-id: profile
-

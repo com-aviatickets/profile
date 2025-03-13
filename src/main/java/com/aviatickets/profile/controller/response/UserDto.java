@@ -2,7 +2,6 @@ package com.aviatickets.profile.controller.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Value;
 
 import java.time.ZonedDateTime;
 
