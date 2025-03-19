@@ -88,14 +88,10 @@ public class UserService {
     }
 
     private TokenResponse saveUser(User user) {
-        User savedUser = repository.save(user);
+        User savedUser = userRepository.save(user);
         String refreshToken = JwtUtils.generateToken(savedUser, jwtProperties.refreshToken().secret(), -1);
         String accessToken = JwtUtils.generateToken(savedUser, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
         return new TokenResponse(accessToken, refreshToken);
-    }
-
-    private User saveUser(User user) {
-        return userRepository.save(user);
     }
 
     public Page<UserDto> findAll(Pageable pageable) {
