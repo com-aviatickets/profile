@@ -33,3 +33,9 @@ app:
       ttl: 86400000
     refreshToken:
       secret: "nhetdhirbniote8hbiotth589hfihfgh589tyhgih04hrviorgh85nifgh8trhnvbiurgh89hieh8hrughrh8giur"
+
+kafka:
+  bootstrap-servers: localhost:9092
+  topic: profileUserSync
+  consumer:
+    group-id: profile
