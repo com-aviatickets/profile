@@ -8,6 +8,7 @@ import com.aviatickets.profile.exception.UnauthorizedException;
 import com.aviatickets.profile.exception.UsernameAlreadyExistsException;
 import com.aviatickets.profile.mapper.UserMapper;
 import com.aviatickets.profile.model.User;
+import com.aviatickets.profile.model.UserEvent;
 import com.aviatickets.profile.repository.UserRepository;
 import com.aviatickets.profile.util.JwtUtils;
 import jakarta.validation.constraints.NotNull;
@@ -18,8 +19,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.ZonedDateTime;
 import java.util.NoSuchElementException;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +36,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
-    private final UserRepository userRepository;
+    private final UserEventProducer userEventProducer;
 
     @Transactional(readOnly = true)
     public String login(String refreshToken) {
@@ -64,22 +67,31 @@ public class UserService {
 
     @Transactional
     public TokenResponse signUp(LoginRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
+        if (repository.existsByUsername(request.username())) {
             throw new UsernameAlreadyExistsException("Username already exists: " + request.username());
         }
+
         User user = new User();
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
+        user.setCreatedAt(ZonedDateTime.now());
 
-        user = saveUser(user);
+        UserEvent event = new UserEvent("CREATE", userMapper.modelToDto(user));
 
-        String refreshToken = JwtUtils.generateToken(user, jwtProperties.refreshToken().secret(), -1);
-        String accessToken = JwtUtils.generateToken(user, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
-        return new TokenResponse(accessToken, refreshToken);
+        boolean eventSent = userEventProducer.sendEvent(event);
+
+        if (!eventSent) {
+            throw new RuntimeException("Failed to send event to Kafka. User will not be saved.");
+        }
+
+        return saveUser(user);
     }
 
-    private User saveUser(User user) {
-        return repository.save(user);
+    private TokenResponse saveUser(User user) {
+        User savedUser = repository.save(user);
+        String refreshToken = JwtUtils.generateToken(savedUser, jwtProperties.refreshToken().secret(), -1);
+        String accessToken = JwtUtils.generateToken(savedUser, jwtProperties.accessToken().secret(), jwtProperties.accessToken().ttl());
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     public Page<UserDto> findAll(Pageable pageable) {
